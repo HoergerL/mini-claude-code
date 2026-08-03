@@ -81,7 +81,7 @@ def main():
         f = open(file_path)
         content_file = f.read()
 
-        print(content_file)
+        print("content: ", content_file)
 
         
 
