@@ -71,7 +71,7 @@ def main():
             exit(1)
 
         try:
-            file_path = path = tool_arguments[file_path]
+            file_path = path = tool_arguments['file_path']
         except Exception as e:
             print("The tool_arguments does't contain a file_path argument")
             exit(1)
