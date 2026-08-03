@@ -3,6 +3,7 @@ import os
 import sys
 
 from openai import OpenAI
+import json
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
@@ -54,7 +55,18 @@ def main():
 
     if chat.choices[0].finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
         tool_name = chat.choices[0].message.tool_calls[0].function.name
-        print("tool_name: ", tool_name)
+        raw_tool_arguments = chat.choices[0].message.tool_calls[0].function.arguments
+        print("requiring tool call with name ", tool_name, " and arguments ", raw_tool_arguments)
+
+        if tool_name == "Read":
+            try: 
+                tool_arguments = json.loads(raw_tool_arguments)
+            except Exception as e:
+                print(f"the tool_arguemnts couldn't be parsed as json. Given Input: {raw_tool_arguments}")
+                exit(1)
+
+        print("cleaned tool arguments : ", tool_arguments)
+
 
     print(chat.choices)
 
