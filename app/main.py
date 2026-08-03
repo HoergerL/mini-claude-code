@@ -54,7 +54,7 @@ def main():
 
     # if chat.choices[0].message.content is None: # meaning it's not the final result, but a tool_use
 
-    print(chat)
+    print(chat.choices)
 
     # TODO: Uncomment the following line to pass the first stage
     print(chat.choices[0].message.content)
