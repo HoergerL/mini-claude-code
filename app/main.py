@@ -40,7 +40,7 @@ def main():
     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",
         messages=[{"role": "user", "content": args.p}],
-        tools = [
+        tools=[
             tools
         ]
     )
@@ -48,8 +48,13 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
 
+
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
+
+    # if chat.choices[0].message.content is None: # meaning it's not the final result, but a tool_use
+
+    print(chat)
 
     # TODO: Uncomment the following line to pass the first stage
     print(chat.choices[0].message.content)
