@@ -53,12 +53,12 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
-    # print(chat.choices)
+    print(chat.choices)
 
     if chat.choices[0].finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
         tool_name = chat.choices[0].message.tool_calls[0].function.name
         raw_tool_arguments = chat.choices[0].message.tool_calls[0].function.arguments
-        # print("requiring tool call with name ", tool_name, " and arguments ", raw_tool_arguments)
+        print("requiring tool call with name ", tool_name, " and arguments ", raw_tool_arguments)
 
         if tool_name == "Read":
             try: 
@@ -67,21 +67,22 @@ def main():
                 print(f"the tool_arguemnts couldn't be parsed as json. Given Input: {raw_tool_arguments}, Error details {e}")
                 exit(1)
 
-        # print("cleaned tool arguments : ", tool_arguments)
+        print("cleaned tool arguments : ", tool_arguments)
         if len(tool_arguments) != 1:
             print("The tool_arguments need to only contain a file_path argument")
             exit(1)
 
         try:
-            file_path = path = tool_arguments['file_path']
+            file_path = tool_arguments['file_path']
         except Exception as e:
             print("The tool_arguments does't contain a file_path argument")
             exit(1)
 
-        # print("file_path: ", file_path)
+        print("file_path: ", file_path)
 
         f = open(file_path)
         content_file = f.read()
+        f.close()
 
         print(content_file)
 
