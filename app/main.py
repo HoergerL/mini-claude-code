@@ -63,7 +63,6 @@ def call_LLM(client: OpenAI, messages: list, tools: dict) -> json:
 
 
 def main():
-    messages = [{"role": "user", "content": args.p}]
     p = argparse.ArgumentParser()
     p.add_argument("-p", required=True) # p = prompt
     args = p.parse_args()
@@ -71,6 +70,7 @@ def main():
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
 
+    messages = [{"role": "user", "content": args.p}]
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
     tools = \
