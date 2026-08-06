@@ -9,7 +9,61 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
 
+def parse_raw_tool_arguments(raw_tool_arguments: str) -> dict:
+    try: 
+        tool_arguments = json.loads(raw_tool_arguments)
+    except Exception as e:
+        print(f"the tool_arguemnts couldn't be parsed as json. Given Input: {raw_tool_arguments}, Error details {e}")
+        exit(1)
+
+    # print("cleaned tool arguments : ", tool_arguments)
+
+    return tool_arguments
+
+
+def retreive_file_path(tool_arguments: dict) -> str:
+    if len(tool_arguments) != 1:
+        print("The tool_arguments need to only contain a file_path argument")
+        exit(1)
+    # print("file_path: ", file_path)
+    try:
+        file_path = tool_arguments['file_path']
+    except Exception as e:
+        print("The tool_arguments does't contain a file_path argument")
+        exit(1)
+
+    return file_path
+
+
+def execute_tool_read(raw_tool_arguments: str):
+
+    tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
+    file_path = retreive_file_path(tool_arguments)
+
+    f = open(file_path)
+    content_file = f.read()
+    f.close()
+
+    return content_file
+
+
+def call_LLM(client: OpenAI, messages: list, tools: dict) -> json:
+    response = client.chat.completions.create(
+                model="anthropic/claude-haiku-4.5",
+                messages=messages,
+                tools=[
+                    tools
+                ]
+            )
+    
+    if not response.choices or len(response.choices) == 0:
+        raise RuntimeError("no choices in response")
+    return response
+
+
+
 def main():
+    messages = [{"role": "user", "content": args.p}]
     p = argparse.ArgumentParser()
     p.add_argument("-p", required=True) # p = prompt
     args = p.parse_args()
@@ -38,58 +92,43 @@ def main():
         }
     }
 
-    chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
-        tools=[
-            tools
-        ]
-    )
+    finish_reason = ""
+    while finish_reason != "stop":
 
-    if not chat.choices or len(chat.choices) == 0:
-        raise RuntimeError("no choices in response")
+        llm_response = call_LLM(client, messages, tools)
+        messages.append(llm_response)
 
+        finish_reason = llm_response.choices[0].finish_reason # either stop or tool_calls
 
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!", file=sys.stderr)
+        # You can use print statements as follows for debugging, they'll be visible when running tests.
+        print("Logs from your program will appear here!", file=sys.stderr)
 
-    # print(chat.choices)
+        # print(llm_response.choices)
 
-    if chat.choices[0].finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
-        tool_name = chat.choices[0].message.tool_calls[0].function.name
-        raw_tool_arguments = chat.choices[0].message.tool_calls[0].function.arguments
-        # print("requiring tool call with name ", tool_name, " and arguments ", raw_tool_arguments)
+        if finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
+            for tool_call in llm_response.choices[0].message.tool_calls:
+                tool_call_id = tool_call.id
+                tool_name = tool_call.function.name
+                raw_tool_arguments = tool_call.function.arguments
+                # print("requiring tool call with name ", tool_name, " and arguments ", raw_tool_arguments)
 
-        if tool_name == "Read":
-            try: 
-                tool_arguments = json.loads(raw_tool_arguments)
-            except Exception as e:
-                print(f"the tool_arguemnts couldn't be parsed as json. Given Input: {raw_tool_arguments}, Error details {e}")
-                exit(1)
+                if tool_name == "Read":
+                    tool_response = execute_tool_read(raw_tool_arguments)
 
-            # print("cleaned tool arguments : ", tool_arguments)
-            if len(tool_arguments) != 1:
-                print("The tool_arguments need to only contain a file_path argument")
-                exit(1)
+                messages.append(
+                    {
+                        f"\"role\": \"tool\", \
+                        \"tool_call_id\": \"{tool_call_id}\", \
+                        \"content\": \"{tool_response}\""
+                    }
+                )
 
-            try:
-                file_path = tool_arguments['file_path']
-            except Exception as e:
-                print("The tool_arguments does't contain a file_path argument")
-                exit(1)
+        else:
+            print(f"unhandled finish_reason {finish_reason}, therefore stopping the execution")
 
-            # print("file_path: ", file_path)
+        print("messages: ", messages)
 
-            f = open(file_path)
-            content_file = f.read()
-            f.close()
-
-            print(content_file)
-
-    else:
-    # TODO: Uncomment the following line to pass the first stage
-        print(chat.choices[0].message.content)
-
+    print(llm_response.choices[0].message.content)
 
 if __name__ == "__main__":
     main()
