@@ -96,9 +96,12 @@ def main():
     while finish_reason != "stop":
 
         llm_response = call_LLM(client, messages, tools)
+        print("llm_response: ", llm_response)
         messages.append(llm_response)
 
         finish_reason = llm_response.choices[0].finish_reason # either stop or tool_calls
+
+        print("finish_reason: ", finish_reason)
 
         # You can use print statements as follows for debugging, they'll be visible when running tests.
         print("Logs from your program will appear here!", file=sys.stderr)
