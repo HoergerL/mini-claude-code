@@ -7,6 +7,7 @@ from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
+MODEL = os.getenv("MODEL", default="deepseek/deepseek-chat-v3-0324:free")
 TOOLS = [
     {
         "type": "function",
@@ -126,7 +127,7 @@ def execute_tool_bash(raw_tool_arguments: str) -> str:
 
 def call_llm(client: OpenAI, messages: list, tools: list):
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
+        model=MODEL,
         messages=messages,
         tools=tools,
     )

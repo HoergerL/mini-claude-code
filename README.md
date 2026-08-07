@@ -64,8 +64,17 @@ python -m app.main -p "Read README.md and summarize it in one sentence"
 |---------------------|---------|-------------|
 | `OPENROUTER_API_KEY` | — | Required. Your OpenRouter API key |
 | `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | API base URL (compatible with any OpenAI-compatible endpoint) |
+| `MODEL` | `deepseek/deepseek-chat-v3-0324:free` | Model to use |
 
-The model is set to `anthropic/claude-haiku-4.5` in `app/main.py` and can be changed there.
+**Choosing a model:** The default is a free model on OpenRouter. To find other free models that support tool calling, visit [openrouter.ai/models](https://openrouter.ai/models?order=top&supported_parameters=tools&free=1) and filter by "Free" and "Tools". Set the `MODEL` environment variable to any model ID from that list:
+
+```sh
+# macOS/Linux
+export MODEL="meta-llama/llama-3.3-70b-instruct:free"
+
+# Windows (PowerShell)
+$env:MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+```
 
 ## Security note
 
