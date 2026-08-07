@@ -120,9 +120,9 @@ def main():
 
                 messages.append(
                     {
-                        f"\"role\": \"tool\", \
-                        \"tool_call_id\": \"{tool_call_id}\", \
-                        \"content\": \"{tool_response}\""
+                        "role": "tool", 
+                        "tool_call_id": f"{tool_call_id}",
+                        "content": f"{tool_response}"
                     }
                 )
 
