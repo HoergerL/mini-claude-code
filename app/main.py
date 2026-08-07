@@ -97,7 +97,7 @@ def main():
         print("calling LLM with message: ", messages)
         llm_response = call_LLM(client, messages, tools)
         print("llm_response: ", llm_response)
-        messages.append(llm_response)
+        messages.append(llm_response.choices[0].message)
 
         finish_reason = llm_response.choices[0].finish_reason # either stop or tool_calls
 
