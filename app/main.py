@@ -3,6 +3,7 @@ import os
 import sys
 
 from openai import OpenAI
+import subprocess
 import json
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -49,6 +50,18 @@ def retreive_write_parameters(tool_arguments: dict) -> tuple:
     return (file_path, content)
 
 
+def retreive_bash_parameter(tool_arguments: dict) -> str:
+    if len(tool_arguments) != 1:
+            print("The tool_arguments need to only contain a command argument")
+            exit(1)
+    # print("file_path: ", file_path)
+    try:
+        command = tool_arguments['command']
+    except Exception as e:
+        print("The tool_arguments does't contain a command argument")
+        exit(1)
+
+    return command
 
 
 def execute_tool_read(raw_tool_arguments: str) -> str:
@@ -62,13 +75,27 @@ def execute_tool_read(raw_tool_arguments: str) -> str:
 
     return content_file
 
-def execute_tool_write(raw_tool_arguments: str):
+
+def execute_tool_write(raw_tool_arguments: str) -> None:
     tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
     file_path, content = retreive_write_parameters(tool_arguments)
 
     f = open(file_path, "w")
     f.write(content)
     f.close()
+
+def execute_tool_bash(raw_tool_arguments: str) -> str:
+    tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
+    command = retreive_bash_parameter(tool_arguments)
+
+    
+    try:
+        result = subprocess.check_output(command, shell = True, executable = "/bin/bash", stderr = subprocess.STDOUT)
+
+    except subprocess.CalledProcessError as cpe:
+        result = cpe.output
+
+    return result.decode("utf-8", errors="replace")
 
 
 
@@ -135,6 +162,23 @@ def main():
                 }
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "Bash",
+                "description": "Execute a shell command",
+                "parameters": {
+                "type": "object",
+                "required": ["command"],
+                "properties": {
+                    "command": {
+                    "type": "string",
+                    "description": "The command to execute"
+                    }
+                }
+                }
+            }
         }
     ]
 
@@ -163,6 +207,8 @@ def main():
                 if tool_name == "Write":
                     execute_tool_write(raw_tool_arguments)
                     tool_response = "" # write doesn't return a response
+                if tool_name == "Bash":
+                    tool_response = execute_tool_bash(raw_tool_arguments)
 
                 messages.append(
                     {
