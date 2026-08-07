@@ -2,12 +2,13 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 
 from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
-MODEL = os.getenv("MODEL", default="google/gemma-4-26b-a4b-it:free")
+MODEL = os.getenv("MODEL", default="openrouter/free")
 TOOLS = [
     {
         "type": "function",
@@ -126,15 +127,19 @@ def execute_tool_bash(raw_tool_arguments: str) -> str:
 
 
 def call_llm(client: OpenAI, messages: list, tools: list):
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        tools=tools,
-    )
+    for attempt in range(1, 4):
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=tools,
+        )
 
-    if not response.choices:
-        raise RuntimeError("no choices in response")
-    return response
+        if response.choices:
+            return response
+
+        print(f"Empty response from model (attempt {attempt}/3), retrying...", file=sys.stderr)
+
+    raise RuntimeError("Model returned no choices after 3 attempts. The model may be overloaded — try again later or set a different MODEL.")
 
 
 def main():
