@@ -33,7 +33,7 @@ User prompt → LLM → tool call? → execute tool → LLM → ... → final an
 ```sh
 git clone https://github.com/HoergerL/mini-claude-code.git
 cd mini-claude-code
-pip install openai
+pip install -r requirements.txt
 ```
 
 Set your API key (uses [OpenRouter](https://openrouter.ai) by default):
