@@ -109,6 +109,7 @@ def main():
         # print(llm_response.choices)
 
         if finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
+            print("in finish_reason = tool_calls")
             for tool_call in llm_response.choices[0].message.tool_calls:
                 tool_call_id = tool_call.id
                 tool_name = tool_call.function.name
