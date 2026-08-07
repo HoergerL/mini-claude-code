@@ -94,14 +94,12 @@ def main():
 
     finish_reason = ""
     while finish_reason != "stop":
-        print("calling LLM with message: ", messages)
         llm_response = call_LLM(client, messages, tools)
-        print("llm_response: ", llm_response)
         messages.append(llm_response.choices[0].message)
 
         finish_reason = llm_response.choices[0].finish_reason # either stop or tool_calls
 
-        print("finish_reason: ", finish_reason)
+        # print("finish_reason: ", finish_reason)
 
         # You can use print statements as follows for debugging, they'll be visible when running tests.
         print("Logs from your program will appear here!", file=sys.stderr)
@@ -109,9 +107,7 @@ def main():
         # print(llm_response.choices)
 
         if finish_reason == "tool_calls": # meaning it's not the final result, but a tool_call
-            print("in finish_reason = tool_calls")
             for tool_call in llm_response.choices[0].message.tool_calls:
-                print("in for loop", tool_call)
                 tool_call_id = tool_call.id
                 tool_name = tool_call.function.name
                 raw_tool_arguments = tool_call.function.arguments
@@ -131,7 +127,6 @@ def main():
         else:
             print(f"unhandled finish_reason {finish_reason}, therefore stopping the execution")
 
-        print("messages: ", messages)
 
     print(llm_response.choices[0].message.content)
 
