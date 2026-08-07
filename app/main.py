@@ -21,7 +21,7 @@ def parse_raw_tool_arguments(raw_tool_arguments: str) -> dict:
     return tool_arguments
 
 
-def retreive_file_path(tool_arguments: dict) -> str:
+def retreive_read_parameter(tool_arguments: dict) -> str:
     if len(tool_arguments) != 1:
         print("The tool_arguments need to only contain a file_path argument")
         exit(1)
@@ -34,17 +34,42 @@ def retreive_file_path(tool_arguments: dict) -> str:
 
     return file_path
 
+def retreive_write_parameters(tool_arguments: dict) -> tuple:
+    if len(tool_arguments) != 2:
+        print("The tool_arguments need to contain a file_path and a content argument")
+        exit(1)
+    # print("file_path: ", file_path)
+    try:
+        file_path = tool_arguments['file_path']
+        content = tool_arguments['content']
+    except Exception as e:
+        print("The tool_arguments does't contain a file_path or a content argument")
+        exit(1)
 
-def execute_tool_read(raw_tool_arguments: str):
+    return (file_path, content)
+
+
+
+
+def execute_tool_read(raw_tool_arguments: str) -> str:
 
     tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
-    file_path = retreive_file_path(tool_arguments)
+    file_path = retreive_read_parameter(tool_arguments)
 
     f = open(file_path)
     content_file = f.read()
     f.close()
 
     return content_file
+
+def execute_tool_write(raw_tool_arguments: str):
+    tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
+    file_path, content = retreive_write_parameters(tool_arguments)
+
+    f = open(file_path, "w")
+    f.write(content)
+    f.close()
+
 
 
 def call_LLM(client: OpenAI, messages: list, tools: list) -> json:
@@ -135,6 +160,9 @@ def main():
 
                 if tool_name == "Read":
                     tool_response = execute_tool_read(raw_tool_arguments)
+                if tool_name == "Write":
+                    execute_tool_write(raw_tool_arguments)
+                    tool_response = "" # write doesn't return a response
 
                 messages.append(
                     {
