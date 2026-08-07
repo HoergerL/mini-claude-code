@@ -94,7 +94,7 @@ def main():
 
     finish_reason = ""
     while finish_reason != "stop":
-
+        print("calling LLM")
         llm_response = call_LLM(client, messages, tools)
         print("llm_response: ", llm_response)
         messages.append(llm_response)
