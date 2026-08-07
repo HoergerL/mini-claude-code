@@ -7,6 +7,63 @@ from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "Read",
+            "description": "Read and return the contents of a file",
+            "parameters": {
+                "type": "object",
+                "required": ["file_path"],
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "The path to the file to read"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Write",
+            "description": "Write content to a file",
+            "parameters": {
+                "type": "object",
+                "required": ["file_path", "content"],
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "The path of the file to write to"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "The content to write to the file"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Bash",
+            "description": "Execute a shell command",
+            "parameters": {
+                "type": "object",
+                "required": ["command"],
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "The command to execute"
+                    }
+                }
+            }
+        }
+    }
+]
 
 
 def parse_raw_tool_arguments(raw_tool_arguments: str) -> dict:
@@ -47,6 +104,8 @@ def execute_tool_write(raw_tool_arguments: str) -> str:
 
 
 def execute_tool_bash(raw_tool_arguments: str) -> str:
+    # NOTE: executes arbitrary shell commands as instructed by the LLM.
+    # In production, consider sandboxing or user confirmation for sensitive commands.
     try:
         tool_arguments = parse_raw_tool_arguments(raw_tool_arguments)
         command = tool_arguments["command"]
@@ -59,102 +118,43 @@ def execute_tool_bash(raw_tool_arguments: str) -> str:
         )
     except subprocess.CalledProcessError as e:
         result = e.output
+    except OSError as e:
+        return f"Error: could not execute command: {e}"
 
     return result.decode("utf-8", errors="replace")
 
 
-
-def call_LLM(client: OpenAI, messages: list, tools: list):
+def call_llm(client: OpenAI, messages: list, tools: list):
     response = client.chat.completions.create(
-                model="anthropic/claude-haiku-4.5",
-                messages=messages,
-                tools=tools
-            )
-    
+        model="anthropic/claude-haiku-4.5",
+        messages=messages,
+        tools=tools,
+    )
+
     if not response.choices:
         raise RuntimeError("no choices in response")
     return response
 
 
-
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("-p", required=True) # p = prompt
-    args = p.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--prompt", required=True)
+    args = parser.parse_args()
 
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
 
-    messages = [{"role": "user", "content": args.p}]
+    messages = [{"role": "user", "content": args.prompt}]
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "Read",
-                "description": "Read and return the contents of a file",
-                "parameters": {
-                    "type": "object",
-                    "required": ["file_path"],
-                    "properties": {
-                        "file_path": {
-                            "type": "string",
-                            "description": "The path to the file to read"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "Write",
-                "description": "Write content to a file",
-                "parameters": {
-                    "type": "object",
-                    "required": ["file_path", "content"],
-                    "properties": {
-                        "file_path": {
-                            "type": "string",
-                            "description": "The path of the file to write to"
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "The content to write to the file"
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "Bash",
-                "description": "Execute a shell command",
-                "parameters": {
-                    "type": "object",
-                    "required": ["command"],
-                    "properties": {
-                        "command": {
-                            "type": "string",
-                            "description": "The command to execute"
-                        }
-                    }
-                }
-            }
-        }
-    ]
-
     while True:
-        llm_response = call_LLM(client, messages, tools)
+        llm_response = call_llm(client, messages, TOOLS)
         messages.append(llm_response.choices[0].message)
 
         finish_reason = llm_response.choices[0].finish_reason
 
         if finish_reason == "tool_calls":
             for tool_call in llm_response.choices[0].message.tool_calls:
-                tool_call_id = tool_call.id
                 tool_name = tool_call.function.name
                 raw_tool_arguments = tool_call.function.arguments
 
@@ -170,7 +170,7 @@ def main():
                 messages.append(
                     {
                         "role": "tool",
-                        "tool_call_id": tool_call_id,
+                        "tool_call_id": tool_call.id,
                         "content": tool_response
                     }
                 )
@@ -180,8 +180,8 @@ def main():
         else:
             raise RuntimeError(f"unhandled finish_reason: {finish_reason}")
 
-
     print(llm_response.choices[0].message.content)
+
 
 if __name__ == "__main__":
     main()
