@@ -64,7 +64,7 @@ python -m app.main -p "Read README.md and summarize it in one sentence"
 |---------------------|---------|-------------|
 | `OPENROUTER_API_KEY` | — | Required. Your OpenRouter API key |
 | `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | API base URL (compatible with any OpenAI-compatible endpoint) |
-| `MODEL` | `deepseek/deepseek-chat-v3-0324:free` | Model to use |
+| `MODEL` | `google/gemma-4-26b-a4b-it:free` | Model to use |
 
 **Choosing a model:** The default is a free model on OpenRouter. To find other free models that support tool calling, visit [openrouter.ai/models](https://openrouter.ai/models?order=top&supported_parameters=tools&free=1) and filter by "Free" and "Tools". Set the `MODEL` environment variable to any model ID from that list:
 

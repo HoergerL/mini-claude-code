@@ -7,7 +7,7 @@ from openai import OpenAI
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
-MODEL = os.getenv("MODEL", default="deepseek/deepseek-chat-v3-0324:free")
+MODEL = os.getenv("MODEL", default="google/gemma-4-26b-a4b-it:free")
 TOOLS = [
     {
         "type": "function",
