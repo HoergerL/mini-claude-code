@@ -1,7 +1,8 @@
 [project]
-name = "codecrafters-claude-code"
+name = "mini-claude-code"
 version = "0.1.0"
-requires-python = ">=3.14"
+description = "A minimal agentic coding assistant powered by an LLM with Read, Write, and Bash tools."
+requires-python = ">=3.11"
 dependencies = [
     "openai>=2.15.0",
 ]
