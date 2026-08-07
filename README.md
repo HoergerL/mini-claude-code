@@ -28,29 +28,34 @@ User prompt → LLM → tool call? → execute tool → LLM → ... → final an
 
 ## Setup
 
-**Prerequisites:** Python 3.11+, [uv](https://github.com/astral-sh/uv)
+**Prerequisites:** Python 3.11+
 
 ```sh
 git clone https://github.com/HoergerL/mini-claude-code.git
 cd mini-claude-code
+pip install openai
 ```
 
 Set your API key (uses [OpenRouter](https://openrouter.ai) by default):
 
 ```sh
+# macOS/Linux
 export OPENROUTER_API_KEY=your_key_here
+
+# Windows (PowerShell)
+$env:OPENROUTER_API_KEY = "your_key_here"
 ```
 
 ## Usage
 
 ```sh
-uv run -m app.main -p "Your prompt here"
+python -m app.main -p "Your prompt here"
 ```
 
 **Example:**
 
 ```sh
-uv run -m app.main -p "Read README.md and summarize it in one sentence"
+python -m app.main -p "Read README.md and summarize it in one sentence"
 ```
 
 ## Configuration
