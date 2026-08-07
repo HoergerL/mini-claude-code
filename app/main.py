@@ -92,8 +92,7 @@ def main():
         }
     }
 
-    finish_reason = ""
-    while finish_reason != "stop":
+    while True:
         llm_response = call_LLM(client, messages, tools)
         messages.append(llm_response.choices[0].message)
 
@@ -124,8 +123,10 @@ def main():
                     }
                 )
 
+        elif finish_reason == "stop":
+            break
         else:
-            print(f"unhandled finish_reason {finish_reason}, therefore stopping the execution")
+            raise RuntimeError(f"unhandled finish_reason: {finish_reason}")
 
 
     print(llm_response.choices[0].message.content)
