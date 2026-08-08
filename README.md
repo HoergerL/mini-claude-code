@@ -19,13 +19,11 @@ The assistant runs an **agentic loop**:
 Your prompt
     │
     ▼
-  LLM call
-    │
-    ├── wants to use a tool ──► run it locally ──► send result back ──┐
+  LLM call ◄─────────────────────────────────────────────────────────┐
     │                                                                  │
-    └── has the answer ──► print it!                                  │
-                ▲                                                      │
-                └──────────────────────────────────────────────────────┘
+    ├── wants to use a tool ──► run it locally ──► send result back ──┘
+    │
+    └── has the answer ──► print it!
 ```
 
 If a tool fails (file not found, command error, etc.), the error is passed back to the model instead of crashing — so it can try a different approach or let you know what went wrong.
